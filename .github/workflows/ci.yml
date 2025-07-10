@@ -18,3 +18,48 @@ jobs:
         uses: sbt/setup-sbt@v1
       - name: Build and Test
         run: sbt "scalafmtCheckAll; scalafixAll --check; +test"
+
+  build-and-release:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'write'
+      id-token: 'write'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: sbt
+      - name: Setup sbt launcher
+        uses: sbt/setup-sbt@v1
+      - name: Authenticate to Google Cloud
+        uses: 'google-github-actions/auth@v2'
+        with:
+          project_id: ${{ vars.GOOGLE_CLOUD_PROJECT }}
+          workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER_ID }}
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-west1-docker.pkg.dev
+      - name: Generate version
+        id: version
+        run: |
+          VERSION="1.0.${GITHUB_RUN_NUMBER}"
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Generated version: ${VERSION}"
+      - name: Build and publish
+        env:
+          PROJECT_VERSION: ${{ steps.version.outputs.VERSION }}
+          DOCKER_REGISTRY: ${{ vars.GOOGLE_CLOUD_LOCATION }}-docker.pkg.dev
+          DOCKER_REPOSITORY: ${{ vars.GOOGLE_CLOUD_PROJECT }}/${{ vars.DOCKER_REPOSITORY }}
+        run: |
+          sbt "compile; jibImageBuild"
+      - name: Create Git tag
+        run: |
+          git tag "v${{ steps.version.outputs.VERSION }}"
+          git push origin "v${{ steps.version.outputs.VERSION }}"

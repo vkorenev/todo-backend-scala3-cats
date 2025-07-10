@@ -1,4 +1,4 @@
-ThisBuild / version := "0.1.0-SNAPSHOT"
+ThisBuild / version := sys.env.getOrElse("PROJECT_VERSION", "0.0.0-LOCAL-SNAPSHOT")
 ThisBuild / scalaVersion := "3.7.1"
 ThisBuild / semanticdbEnabled := true
 ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
@@ -18,7 +18,7 @@ val tapirVersion = "1.11.35"
 
 lazy val root = (project in file("."))
   .settings(
-    name := "todo-backend-scala3-cats",
+    name := "todo-backend",
     libraryDependencies ++= Seq(
       "com.softwaremill.sttp.tapir" %% "tapir-core" % tapirVersion,
       "com.softwaremill.sttp.tapir" %% "tapir-http4s-server" % tapirVersion,
@@ -46,5 +46,7 @@ lazy val root = (project in file("."))
       // "-rewrite",
       "-source:3.7-migration",
       "-unchecked"
-    )
+    ),
+    jibRegistry := sys.env.getOrElse("DOCKER_REGISTRY", "missing-DOCKER_REGISTRY-env-var"),
+    jibOrganization := sys.env.getOrElse("DOCKER_REPOSITORY", "missing-DOCKER_REPOSITORY-env-var")
   )
