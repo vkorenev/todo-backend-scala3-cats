@@ -59,6 +59,18 @@ jobs:
           DOCKER_REPOSITORY: ${{ vars.GOOGLE_CLOUD_PROJECT }}/${{ vars.DOCKER_REPOSITORY }}
         run: |
           sbt "compile; jibImageBuild"
+      - name: Generate Knative service manifest
+        env:
+          DOCKER_IMAGE: ${{ vars.GOOGLE_CLOUD_LOCATION }}-docker.pkg.dev/${{ vars.GOOGLE_CLOUD_PROJECT }}/${{ vars.DOCKER_REPOSITORY }}/todo-backend:${{ steps.version.outputs.VERSION }}
+        run: |
+          echo "Generating manifest for image: ${DOCKER_IMAGE}"
+          envsubst < deploy/service.template.yaml > deploy/service.yaml
+      - name: Deploy to Cloud Run
+        uses: 'google-github-actions/deploy-cloudrun@v2'
+        with:
+          metadata: deploy/service.yaml
+          project_id: ${{ vars.GOOGLE_CLOUD_PROJECT }}
+          region: ${{ vars.GOOGLE_CLOUD_LOCATION }}
       - name: Create Git tag
         run: |
           git tag "v${{ steps.version.outputs.VERSION }}"
