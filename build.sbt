@@ -47,6 +47,7 @@ lazy val root = (project in file("."))
       "-source:3.7-migration",
       "-unchecked"
     ),
+    jibBaseImage := "eclipse-temurin:21-jre",
     jibRegistry := sys.env.getOrElse("DOCKER_REGISTRY", "missing-DOCKER_REGISTRY-env-var"),
     jibOrganization := sys.env.getOrElse("DOCKER_REPOSITORY", "missing-DOCKER_REPOSITORY-env-var")
   )
