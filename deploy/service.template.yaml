@@ -13,9 +13,18 @@ spec:
     spec:
       serviceAccountName: ${GOOGLE_CLOUD_RUN_SERVICE_ACCOUNT_EMAIL}
       containers:
-        - image: ${DOCKER_IMAGE}
+        - name: todo-backend
+          image: ${DOCKER_IMAGE}
           ports:
             - containerPort: 8080
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
           resources:
             requests:
               cpu: "250m"
