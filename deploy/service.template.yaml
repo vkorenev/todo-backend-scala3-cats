@@ -85,6 +85,7 @@ spec:
                     timeout: 10s
                 exporters:
                   googlecloud:
+                  googlemanagedprometheus:
                 extensions:
                   health_check:
                     endpoint: 0.0.0.0:13133
@@ -99,7 +100,7 @@ spec:
                     metrics:
                       receivers: [otlp]
                       processors: [resourcedetection, memory_limiter, batch]
-                      exporters: [googlecloud]
+                      exporters: [googlemanagedprometheus]
                     logs:
                       receivers: [otlp]
                       processors: [resourcedetection, memory_limiter, batch]
