@@ -11,6 +11,7 @@ val circeVersion = "0.14.14"
 val doobieVersion = "1.0.0-RC9"
 val pureConfigVersion = "0.17.9"
 val logbackVersion = "1.5.18"
+val logstashLogbackEncoderVersion = "8.1"
 val log4catsVersion = "2.7.1"
 val munitVersion = "1.1.1"
 val munitCatsEffectVersion = "1.0.7"
@@ -34,14 +35,16 @@ lazy val root = (project in file("."))
   .settings(
     name := "todo-backend",
     libraryDependencies ++= Seq(
+      "ch.qos.logback" % "logback-classic" % logbackVersion % Runtime,
       "co.fs2" %% "fs2-core" % fs2Version,
       "co.fs2" %% "fs2-io" % fs2Version,
-      "ch.qos.logback" % "logback-classic" % logbackVersion % Runtime,
       "com.softwaremill.sttp.tapir" %% "tapir-core" % tapirVersion,
       "com.softwaremill.sttp.tapir" %% "tapir-http4s-server" % tapirVersion,
       "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
       "io.opentelemetry" % "opentelemetry-exporter-otlp" % openTelemetryBom.key.value % Runtime,
+      "io.opentelemetry.instrumentation" % "opentelemetry-logback-appender-1.0" % openTelemetryInstrumentationBomAlpha.key.value % Runtime,
       "io.opentelemetry.instrumentation" % "opentelemetry-runtime-telemetry-java17" % openTelemetryInstrumentationBomAlpha.key.value,
+      "net.logstash.logback" % "logstash-logback-encoder" % logstashLogbackEncoderVersion % Runtime,
       "org.http4s" %% "http4s-ember-server" % http4sVersion,
       "org.typelevel" %% "cats-core" % catsVersion,
       "org.typelevel" %% "cats-effect" % catsEffectVersion,

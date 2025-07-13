@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <appender name="JsonConsole" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+      <fieldNames>
+        <timestamp>[ignore]</timestamp>
+        <version>[ignore]</version>
+        <logger>[ignore]</logger>
+        <thread>[ignore]</thread>
+        <level>[ignore]</level>
+        <levelValue>[ignore]</levelValue>
+      </fieldNames>
+    </encoder>
+  </appender>
+  <appender name="OpenTelemetry" class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
+    <captureExperimentalAttributes>true</captureExperimentalAttributes>
+    <captureKeyValuePairAttributes>true</captureKeyValuePairAttributes>
+  </appender>
+  <root level="INFO">
+    <appender-ref ref="JsonConsole"/>
+    <appender-ref ref="OpenTelemetry"/>
+  </root>
+</configuration>
