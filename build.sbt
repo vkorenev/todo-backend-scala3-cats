@@ -10,7 +10,7 @@ val http4sVersion = "0.23.30"
 val circeVersion = "0.14.14"
 val doobieVersion = "1.0.0-RC9"
 val pureConfigVersion = "0.17.9"
-val logbackVersion = "1.5.18"
+val log4j2Version = "2.25.1"
 val log4catsVersion = "2.7.1"
 val munitVersion = "1.1.1"
 val munitCatsEffectVersion = "1.0.7"
@@ -19,6 +19,9 @@ val otel4sVersion = "0.13.1"
 val openTelemetryVersion = "1.51.0"
 val openTelemetryInstrumentationVersion = "2.17.1"
 
+lazy val log4j2Bom = com.here.bom.Bom(
+  "org.apache.logging.log4j" % "log4j-bom" % log4j2Version
+)
 lazy val openTelemetryBom = com.here.bom.Bom(
   "io.opentelemetry" % "opentelemetry-bom-alpha" % s"$openTelemetryVersion-alpha"
 )
@@ -26,8 +29,13 @@ lazy val openTelemetryInstrumentationBomAlpha = com.here.bom.Bom(
   "io.opentelemetry.instrumentation" % "opentelemetry-instrumentation-bom-alpha" % s"$openTelemetryInstrumentationVersion-alpha"
 )
 
+val jvmOptions = List(
+  "-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager"
+)
+
 lazy val root = (project in file("."))
   .settings(
+    log4j2Bom,
     openTelemetryBom,
     openTelemetryInstrumentationBomAlpha
   )
@@ -36,12 +44,16 @@ lazy val root = (project in file("."))
     libraryDependencies ++= Seq(
       "co.fs2" %% "fs2-core" % fs2Version,
       "co.fs2" %% "fs2-io" % fs2Version,
-      "ch.qos.logback" % "logback-classic" % logbackVersion % Runtime,
       "com.softwaremill.sttp.tapir" %% "tapir-core" % tapirVersion,
       "com.softwaremill.sttp.tapir" %% "tapir-http4s-server" % tapirVersion,
       "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
       "io.opentelemetry" % "opentelemetry-exporter-otlp" % openTelemetryBom.key.value % Runtime,
+      "io.opentelemetry.instrumentation" % "opentelemetry-log4j-appender-2.17" % openTelemetryInstrumentationBomAlpha.key.value % Runtime,
       "io.opentelemetry.instrumentation" % "opentelemetry-runtime-telemetry-java17" % openTelemetryInstrumentationBomAlpha.key.value,
+      "org.apache.logging.log4j" % "log4j-core" % log4j2Bom.key.value % Runtime,
+      "org.apache.logging.log4j" % "log4j-jul" % log4j2Bom.key.value % Runtime,
+      "org.apache.logging.log4j" % "log4j-layout-template-json" % log4j2Bom.key.value % Runtime,
+      "org.apache.logging.log4j" % "log4j-slf4j2-impl" % log4j2Bom.key.value % Runtime,
       "org.http4s" %% "http4s-ember-server" % http4sVersion,
       "org.typelevel" %% "cats-core" % catsVersion,
       "org.typelevel" %% "cats-effect" % catsEffectVersion,
@@ -49,8 +61,11 @@ lazy val root = (project in file("."))
       "org.typelevel" %% "munit-cats-effect-3" % munitCatsEffectVersion % Test,
       "org.typelevel" %% "otel4s-oteljava" % otel4sVersion
     ),
-    dependencyOverrides ++= openTelemetryInstrumentationBomAlpha.key.value.bomDependencies ++
+    dependencyOverrides ++= log4j2Bom.key.value.bomDependencies ++
+      openTelemetryInstrumentationBomAlpha.key.value.bomDependencies ++
       openTelemetryBom.key.value.bomDependencies,
+    Compile / run / fork := true,
+    javaOptions ++= jvmOptions,
     testFrameworks += new TestFramework("munit.Framework"),
     scalacOptions ++= Seq(
       "-Wnonunit-statement",
@@ -59,12 +74,10 @@ lazy val root = (project in file("."))
       "-Wvalue-discard",
       "-deprecation",
       "-feature",
-      // "-indent",
-      // "-new-syntax",
-      // "-rewrite",
       "-source:3.7-migration",
       "-unchecked"
     ),
+    jibJvmFlags := jvmOptions,
     jibBaseImage := "eclipse-temurin:21-jre",
     jibRegistry := sys.env.getOrElse("DOCKER_REGISTRY", "missing-DOCKER_REGISTRY-env-var"),
     jibOrganization := sys.env.getOrElse("DOCKER_REPOSITORY", "missing-DOCKER_REPOSITORY-env-var")
