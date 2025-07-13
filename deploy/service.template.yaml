@@ -10,6 +10,7 @@ spec:
       annotations:
         autoscaling.knative.dev/minScale: "0"
         autoscaling.knative.dev/maxScale: "3"
+        run.googleapis.com/container-dependencies: "{todo-backend:[otel-collector]}"
     spec:
       serviceAccountName: ${GOOGLE_CLOUD_RUN_SERVICE_ACCOUNT_EMAIL}
       containers:
@@ -31,6 +32,13 @@ spec:
             initialDelaySeconds: 5
             timeoutSeconds: 30
             periodSeconds: 30
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: "todo-backend"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://localhost:4317"
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: "grpc"
           resources:
             requests:
               cpu: "250m"
@@ -38,3 +46,68 @@ spec:
             limits:
               cpu: "500m"
               memory: "1Gi"
+        - name: otel-collector
+          image: "us-docker.pkg.dev/cloud-ops-agents-artifacts/google-cloud-opentelemetry-collector/otelcol-google:0.129.0"
+          args: [ "--config=env:OTEL_CONFIG" ]
+          startupProbe:
+            httpGet:
+              path: /
+              port: 13133
+            timeoutSeconds: 10
+            periodSeconds: 30
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 13133
+            timeoutSeconds: 10
+            periodSeconds: 30
+          env:
+            - name: GOOGLE_CLOUD_PROJECT
+              value: "${GOOGLE_CLOUD_PROJECT}"
+            - name: OTEL_CONFIG
+              value: |
+                receivers:
+                  otlp:
+                    protocols:
+                      grpc:
+                        endpoint: localhost:4317
+                processors:
+                  memory_limiter:
+                    check_interval: 1s
+                    limit_percentage: 65
+                    spike_limit_percentage: 20
+                  batch:
+                    timeout: 5s
+                    send_batch_size: 200
+                    send_batch_max_size: 200
+                  resourcedetection:
+                    detectors: [gcp]
+                    timeout: 10s
+                exporters:
+                  googlecloud:
+                extensions:
+                  health_check:
+                    endpoint: 0.0.0.0:13133
+                service:
+                  extensions:
+                    - health_check
+                  pipelines:
+                    traces:
+                      receivers: [otlp]
+                      processors: [resourcedetection, memory_limiter, batch]
+                      exporters: [googlecloud]
+                    metrics:
+                      receivers: [otlp]
+                      processors: [resourcedetection, memory_limiter, batch]
+                      exporters: [googlecloud]
+                    logs:
+                      receivers: [otlp]
+                      processors: [resourcedetection, memory_limiter, batch]
+                      exporters: [googlecloud]
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
