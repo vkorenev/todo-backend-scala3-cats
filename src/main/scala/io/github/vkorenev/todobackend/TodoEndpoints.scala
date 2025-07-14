@@ -1,6 +1,7 @@
 package io.github.vkorenev.todobackend
 
 import cats.effect.Async
+import cats.syntax.all.*
 import org.http4s.HttpRoutes
 import sttp.tapir.*
 import sttp.tapir.json.jsoniter.*
@@ -9,8 +10,19 @@ import sttp.tapir.server.http4s.Http4sServerOptions
 import sttp.tapir.server.interceptor.cors.CORSInterceptor
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
 
-case class TodoEndpoints[F[_]: Async]():
+import java.util.UUID
+
+case class TodoEndpoints[F[_]: Async](todoService: TodoService[F]):
   private val baseUri = "https://todo-backend-wggmkml2fa-uw.a.run.app"
+
+  case class TodoNotFound(id: UUID) extends Exception(s"Todo with id $id not found")
+
+  private def toApiTodo(todoItem: TodoItem): Todo =
+    Todo(
+      title = todoItem.title,
+      completed = todoItem.completed,
+      url = s"$baseUri/todos/${todoItem.id}"
+    )
 
   private def healthEndpoint = endpoint.get
     .in("health")
@@ -24,7 +36,9 @@ case class TodoEndpoints[F[_]: Async]():
     .out(jsonBody[List[Todo]])
     .summary("Get all todos")
     .description("Returns a list of all todos")
-    .serverLogicSuccessPure[F](_ => List.empty[Todo])
+    .serverLogicSuccess[F] { _ =>
+      todoService.getAllTodos.map(_.map(toApiTodo))
+    }
 
   private def createTodoEndpoint = endpoint.post
     .in("todos")
@@ -32,25 +46,25 @@ case class TodoEndpoints[F[_]: Async]():
     .out(jsonBody[Todo])
     .summary("Create a new todo")
     .description("Creates a new todo item")
-    .serverLogicSuccessPure[F] { request =>
-      Todo(
-        title = request.title,
-        completed = false,
-        url = s"$baseUri/todos/1"
-      )
+    .serverLogicSuccess[F] { request =>
+      todoService.createTodo(request).map(toApiTodo)
     }
+
+  private def parseUUID(str: String): F[UUID] =
+    Async[F].catchNonFatal(UUID.fromString(str))
 
   private def getTodoEndpoint = endpoint.get
     .in("todos" / path[String]("id"))
     .out(jsonBody[Todo])
     .summary("Get a todo by ID")
     .description("Returns a specific todo item by its ID")
-    .serverLogicSuccessPure[F] { id =>
-      Todo(
-        title = s"Todo $id",
-        completed = false,
-        url = s"$baseUri/todos/$id"
-      )
+    .serverLogicSuccess[F] { id =>
+      parseUUID(id).flatMap { uuid =>
+        todoService.getTodoById(uuid).flatMap {
+          case Some(todoItem) => Async[F].pure(toApiTodo(todoItem))
+          case None => Async[F].raiseError(TodoNotFound(uuid))
+        }
+      }
     }
 
   private def updateTodoEndpoint = endpoint.patch
@@ -59,12 +73,13 @@ case class TodoEndpoints[F[_]: Async]():
     .out(jsonBody[Todo])
     .summary("Update a todo by ID")
     .description("Updates a specific todo item by its ID")
-    .serverLogicSuccessPure[F] { case (id, updateRequest) =>
-      Todo(
-        title = updateRequest.title.getOrElse(s"Todo $id"),
-        completed = updateRequest.completed.getOrElse(false),
-        url = s"$baseUri/todos/$id"
-      )
+    .serverLogicSuccess[F] { case (id, updateRequest) =>
+      parseUUID(id).flatMap { uuid =>
+        todoService.updateTodo(uuid, updateRequest).flatMap {
+          case Some(todoItem) => Async[F].pure(toApiTodo(todoItem))
+          case None => Async[F].raiseError(TodoNotFound(uuid))
+        }
+      }
     }
 
   private def deleteTodoEndpoint = endpoint.delete
@@ -72,8 +87,13 @@ case class TodoEndpoints[F[_]: Async]():
     .out(stringBody)
     .summary("Delete a todo by ID")
     .description("Deletes a specific todo item by its ID")
-    .serverLogicSuccessPure[F] { id =>
-      s"Todo $id deleted"
+    .serverLogicSuccess[F] { id =>
+      parseUUID(id).flatMap { uuid =>
+        todoService.deleteTodo(uuid).flatMap { deleted =>
+          if deleted then Async[F].pure(s"Todo $id deleted")
+          else Async[F].raiseError(TodoNotFound(uuid))
+        }
+      }
     }
 
   private def deleteAllTodosEndpoint = endpoint.delete
@@ -81,7 +101,9 @@ case class TodoEndpoints[F[_]: Async]():
     .out(stringBody)
     .summary("Delete all todos")
     .description("Deletes all todo items")
-    .serverLogicSuccessPure[F](_ => "All todos deleted")
+    .serverLogicSuccess[F] { _ =>
+      todoService.deleteAllTodos.as("All todos deleted")
+    }
 
   def routes: HttpRoutes[F] =
     val serverEndpoints = List(
