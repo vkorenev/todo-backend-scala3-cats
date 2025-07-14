@@ -40,6 +40,42 @@ case class TodoEndpoints[F[_]: Async]():
       )
     }
 
+  private def getTodoEndpoint = endpoint.get
+    .in("todos" / path[String]("id"))
+    .out(jsonBody[Todo])
+    .summary("Get a todo by ID")
+    .description("Returns a specific todo item by its ID")
+    .serverLogicSuccessPure[F] { id =>
+      Todo(
+        title = s"Todo $id",
+        completed = false,
+        url = s"$baseUri/todos/$id"
+      )
+    }
+
+  private def updateTodoEndpoint = endpoint.patch
+    .in("todos" / path[String]("id"))
+    .in(jsonBody[UpdateTodoRequest])
+    .out(jsonBody[Todo])
+    .summary("Update a todo by ID")
+    .description("Updates a specific todo item by its ID")
+    .serverLogicSuccessPure[F] { case (id, updateRequest) =>
+      Todo(
+        title = updateRequest.title.getOrElse(s"Todo $id"),
+        completed = updateRequest.completed.getOrElse(false),
+        url = s"$baseUri/todos/$id"
+      )
+    }
+
+  private def deleteTodoEndpoint = endpoint.delete
+    .in("todos" / path[String]("id"))
+    .out(stringBody)
+    .summary("Delete a todo by ID")
+    .description("Deletes a specific todo item by its ID")
+    .serverLogicSuccessPure[F] { id =>
+      s"Todo $id deleted"
+    }
+
   private def deleteAllTodosEndpoint = endpoint.delete
     .in("todos")
     .out(stringBody)
@@ -52,6 +88,9 @@ case class TodoEndpoints[F[_]: Async]():
       healthEndpoint,
       getAllTodosEndpoint,
       createTodoEndpoint,
+      getTodoEndpoint,
+      updateTodoEndpoint,
+      deleteTodoEndpoint,
       deleteAllTodosEndpoint
     )
 
