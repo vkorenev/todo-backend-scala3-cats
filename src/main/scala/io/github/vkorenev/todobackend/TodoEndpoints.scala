@@ -27,15 +27,20 @@ case class TodoEndpoints[F[_]: Async]():
   private def createTodoEndpoint = endpoint.post
     .in("todos")
     .in(jsonBody[CreateTodoRequest])
-    .in(extractFromRequest(_.uri))
+    .in(extractFromRequest { req =>
+      req.header("Origin").getOrElse {
+        val host = req.header("Host").getOrElse("localhost")
+        s"http://$host"
+      }
+    })
     .out(jsonBody[Todo])
     .summary("Create a new todo")
     .description("Creates a new todo item")
-    .serverLogicSuccessPure[F] { case (request, requestUrl) =>
+    .serverLogicSuccessPure[F] { case (request, baseUrl) =>
       Todo(
         title = request.title,
         completed = false,
-        url = requestUrl.addPath("1").toString
+        url = s"$baseUrl/todos/1"
       )
     }
 
