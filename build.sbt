@@ -18,6 +18,7 @@ val tapirVersion = "1.11.35"
 val otel4sVersion = "0.13.1"
 val openTelemetryVersion = "1.51.0"
 val openTelemetryInstrumentationVersion = "2.17.1"
+val jsoniterScalaVersion = "2.36.7"
 
 lazy val log4j2Bom = com.here.bom.Bom(
   "org.apache.logging.log4j" % "log4j-bom" % log4j2Version
@@ -44,8 +45,10 @@ lazy val root = (project in file("."))
     libraryDependencies ++= Seq(
       "co.fs2" %% "fs2-core" % fs2Version,
       "co.fs2" %% "fs2-io" % fs2Version,
+      "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % jsoniterScalaVersion,
       "com.softwaremill.sttp.tapir" %% "tapir-core" % tapirVersion,
       "com.softwaremill.sttp.tapir" %% "tapir-http4s-server" % tapirVersion,
+      "com.softwaremill.sttp.tapir" %% "tapir-jsoniter-scala" % tapirVersion,
       "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
       "io.opentelemetry" % "opentelemetry-exporter-otlp" % openTelemetryBom.key.value % Runtime,
       "io.opentelemetry.instrumentation" % "opentelemetry-log4j-appender-2.17" % openTelemetryInstrumentationBomAlpha.key.value % Runtime,

@@ -1,0 +1,26 @@
+package io.github.vkorenev.todobackend
+
+import com.github.plokhotnyuk.jsoniter_scala.core.*
+import com.github.plokhotnyuk.jsoniter_scala.macros.*
+import sttp.tapir.Schema
+
+import java.util.UUID
+
+case class Todo(
+    id: UUID,
+    title: String,
+    completed: Boolean = false
+) derives Schema
+
+case class CreateTodoRequest(title: String) derives Schema
+
+case class UpdateTodoRequest(
+    title: Option[String] = None,
+    completed: Option[Boolean] = None
+) derives Schema
+
+// JsonValueCodec instances for jsoniter-scala
+given JsonValueCodec[Todo] = JsonCodecMaker.make
+given JsonValueCodec[CreateTodoRequest] = JsonCodecMaker.make
+given JsonValueCodec[UpdateTodoRequest] = JsonCodecMaker.make
+given JsonValueCodec[List[Todo]] = JsonCodecMaker.make
