@@ -10,6 +10,8 @@ import sttp.tapir.server.interceptor.cors.CORSInterceptor
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
 
 case class TodoEndpoints[F[_]: Async]():
+  private val baseUri = "https://todo-backend-wggmkml2fa-uw.a.run.app"
+
   private def healthEndpoint = endpoint.get
     .in("health")
     .out(stringBody)
@@ -27,15 +29,14 @@ case class TodoEndpoints[F[_]: Async]():
   private def createTodoEndpoint = endpoint.post
     .in("todos")
     .in(jsonBody[CreateTodoRequest])
-    .in(extractFromRequest(_.uri))
     .out(jsonBody[Todo])
     .summary("Create a new todo")
     .description("Creates a new todo item")
-    .serverLogicSuccessPure[F] { case (request, requestUrl) =>
+    .serverLogicSuccessPure[F] { request =>
       Todo(
         title = request.title,
         completed = false,
-        url = requestUrl.addPath("1").toString
+        url = s"$baseUri/todos/1"
       )
     }
 
