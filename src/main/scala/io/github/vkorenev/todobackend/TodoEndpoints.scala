@@ -11,12 +11,10 @@ import sttp.tapir.server.interceptor.cors.CORSConfig
 import sttp.tapir.server.interceptor.cors.CORSInterceptor
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
 
-import java.util.UUID
-
 case class TodoEndpoints[F[_]: Async](todoService: TodoService[F]):
   private val baseUri = "https://todo-backend-wggmkml2fa-uw.a.run.app"
 
-  case class TodoNotFound(id: UUID) extends Exception(s"Todo with id $id not found")
+  case class TodoNotFound(id: Long) extends Exception(s"Todo with id $id not found")
 
   private def toApiTodo(todoItem: TodoItem): Todo =
     Todo(
@@ -52,49 +50,40 @@ case class TodoEndpoints[F[_]: Async](todoService: TodoService[F]):
       todoService.createTodo(request).map(toApiTodo)
     }
 
-  private def parseUUID(str: String): F[UUID] =
-    Async[F].catchNonFatal(UUID.fromString(str))
-
   private def getTodoEndpoint = endpoint.get
-    .in("todos" / path[String]("id"))
+    .in("todos" / path[Long]("id"))
     .out(jsonBody[Todo])
     .summary("Get a todo by ID")
     .description("Returns a specific todo item by its ID")
     .serverLogicSuccess[F] { id =>
-      parseUUID(id).flatMap { uuid =>
-        todoService.getTodoById(uuid).flatMap {
-          case Some(todoItem) => Async[F].pure(toApiTodo(todoItem))
-          case None => Async[F].raiseError(TodoNotFound(uuid))
-        }
+      todoService.getTodoById(id).flatMap {
+        case Some(todoItem) => Async[F].pure(toApiTodo(todoItem))
+        case None => Async[F].raiseError(TodoNotFound(id))
       }
     }
 
   private def updateTodoEndpoint = endpoint.patch
-    .in("todos" / path[String]("id"))
+    .in("todos" / path[Long]("id"))
     .in(jsonBody[UpdateTodoRequest])
     .out(jsonBody[Todo])
     .summary("Update a todo by ID")
     .description("Updates a specific todo item by its ID")
     .serverLogicSuccess[F] { case (id, updateRequest) =>
-      parseUUID(id).flatMap { uuid =>
-        todoService.updateTodo(uuid, updateRequest).flatMap {
-          case Some(todoItem) => Async[F].pure(toApiTodo(todoItem))
-          case None => Async[F].raiseError(TodoNotFound(uuid))
-        }
+      todoService.updateTodo(id, updateRequest).flatMap {
+        case Some(todoItem) => Async[F].pure(toApiTodo(todoItem))
+        case None => Async[F].raiseError(TodoNotFound(id))
       }
     }
 
   private def deleteTodoEndpoint = endpoint.delete
-    .in("todos" / path[String]("id"))
+    .in("todos" / path[Long]("id"))
     .out(stringBody)
     .summary("Delete a todo by ID")
     .description("Deletes a specific todo item by its ID")
     .serverLogicSuccess[F] { id =>
-      parseUUID(id).flatMap { uuid =>
-        todoService.deleteTodo(uuid).flatMap { deleted =>
-          if deleted then Async[F].pure(s"Todo $id deleted")
-          else Async[F].raiseError(TodoNotFound(uuid))
-        }
+      todoService.deleteTodo(id).flatMap { deleted =>
+        if deleted then Async[F].pure(s"Todo $id deleted")
+        else Async[F].raiseError(TodoNotFound(id))
       }
     }
 

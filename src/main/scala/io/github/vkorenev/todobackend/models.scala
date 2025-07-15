@@ -4,10 +4,8 @@ import com.github.plokhotnyuk.jsoniter_scala.core.*
 import com.github.plokhotnyuk.jsoniter_scala.macros.*
 import sttp.tapir.Schema
 
-import java.util.UUID
-
 case class TodoItem(
-    id: UUID,
+    id: Long,
     title: String,
     completed: Boolean,
     order: Option[Int]
