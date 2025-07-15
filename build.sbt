@@ -58,6 +58,7 @@ lazy val root = (project in file("."))
       "org.apache.logging.log4j" % "log4j-layout-template-json" % log4j2Bom.key.value % Runtime,
       "org.apache.logging.log4j" % "log4j-slf4j2-impl" % log4j2Bom.key.value % Runtime,
       "org.http4s" %% "http4s-ember-server" % http4sVersion,
+      "org.scalameta" %% "munit" % munitVersion % Test,
       "org.typelevel" %% "cats-core" % catsVersion,
       "org.typelevel" %% "cats-effect" % catsEffectVersion,
       "org.typelevel" %% "log4cats-slf4j" % log4catsVersion,
