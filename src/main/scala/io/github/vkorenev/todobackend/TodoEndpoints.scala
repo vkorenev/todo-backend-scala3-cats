@@ -7,6 +7,7 @@ import sttp.tapir.*
 import sttp.tapir.json.jsoniter.*
 import sttp.tapir.server.http4s.Http4sServerInterpreter
 import sttp.tapir.server.http4s.Http4sServerOptions
+import sttp.tapir.server.interceptor.cors.CORSConfig
 import sttp.tapir.server.interceptor.cors.CORSInterceptor
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
 
@@ -119,6 +120,8 @@ case class TodoEndpoints[F[_]: Async](todoService: TodoService[F]):
     val swaggerEndpoints =
       SwaggerInterpreter().fromServerEndpoints[F](serverEndpoints, "Todo Backend API", "1.0.0")
 
-    Http4sServerInterpreter[F](
-      Http4sServerOptions.customiseInterceptors.corsInterceptor(CORSInterceptor.default).options
-    ).toRoutes(serverEndpoints ++ swaggerEndpoints)
+    val serverOptions = Http4sServerOptions.customiseInterceptors
+      .corsInterceptor(CORSInterceptor.customOrThrow(CORSConfig.default.allowAllMethods))
+      .options
+
+    Http4sServerInterpreter[F](serverOptions).toRoutes(serverEndpoints ++ swaggerEndpoints)
