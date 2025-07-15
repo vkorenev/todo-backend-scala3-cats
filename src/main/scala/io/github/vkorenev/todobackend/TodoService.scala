@@ -29,7 +29,7 @@ class InMemoryTodoService[F[_]: Sync](todosRef: Ref[F, Map[UUID, TodoItem]]) ext
   def createTodo(request: CreateTodoRequest): F[TodoItem] =
     for
       id <- Sync[F].delay(UUID.randomUUID())
-      todo = TodoItem(id = id, title = request.title, completed = false)
+      todo = TodoItem(id = id, title = request.title, completed = false, order = request.order)
       _ <- todosRef.update(_ + (id -> todo))
     yield todo
 
@@ -39,7 +39,8 @@ class InMemoryTodoService[F[_]: Sync](todosRef: Ref[F, Map[UUID, TodoItem]]) ext
         case Some(existingTodo) =>
           val updatedTodo = existingTodo.copy(
             title = request.title.getOrElse(existingTodo.title),
-            completed = request.completed.getOrElse(existingTodo.completed)
+            completed = request.completed.getOrElse(existingTodo.completed),
+            order = request.order.orElse(existingTodo.order)
           )
           val updatedTodos = todos + (id -> updatedTodo)
           (updatedTodos, Some(updatedTodo))

@@ -9,22 +9,26 @@ import java.util.UUID
 case class TodoItem(
     id: UUID,
     title: String,
-    completed: Boolean
+    completed: Boolean,
+    order: Option[Int]
 )
 
 case class Todo(
     title: String,
     completed: Boolean,
-    url: String
+    url: String,
+    order: Option[Int]
 ) derives Schema
 
 case class CreateTodoRequest(
-    title: String
+    title: String,
+    order: Option[Int]
 ) derives Schema
 
 case class UpdateTodoRequest(
     title: Option[String] = None,
-    completed: Option[Boolean] = None
+    completed: Option[Boolean] = None,
+    order: Option[Int] = None
 ) derives Schema
 
 // JsonValueCodec instances for jsoniter-scala

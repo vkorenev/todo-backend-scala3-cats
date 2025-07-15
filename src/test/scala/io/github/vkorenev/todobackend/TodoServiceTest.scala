@@ -10,7 +10,7 @@ class TodoServiceTest extends CatsEffectSuite:
   test("create and retrieve todo") {
     for
       service <- TodoService.make[IO]
-      request = CreateTodoRequest("Test todo")
+      request = CreateTodoRequest("Test todo", None)
       created <- service.createTodo(request)
       retrieved <- service.getTodoById(created.id)
     yield {
@@ -23,9 +23,9 @@ class TodoServiceTest extends CatsEffectSuite:
   test("update todo") {
     for
       service <- TodoService.make[IO]
-      request = CreateTodoRequest("Test todo")
+      request = CreateTodoRequest("Test todo", None)
       created <- service.createTodo(request)
-      updateRequest = UpdateTodoRequest(Some("Updated todo"), Some(true))
+      updateRequest = UpdateTodoRequest(Some("Updated todo"), Some(true), None)
       updated <- service.updateTodo(created.id, updateRequest)
     yield {
       assert(updated.isDefined)
@@ -38,7 +38,7 @@ class TodoServiceTest extends CatsEffectSuite:
   test("delete todo") {
     for
       service <- TodoService.make[IO]
-      request = CreateTodoRequest("Test todo")
+      request = CreateTodoRequest("Test todo", None)
       created <- service.createTodo(request)
       deleted <- service.deleteTodo(created.id)
       retrieved <- service.getTodoById(created.id)
@@ -51,8 +51,8 @@ class TodoServiceTest extends CatsEffectSuite:
   test("get all todos") {
     for
       service <- TodoService.make[IO]
-      request1 = CreateTodoRequest("Todo 1")
-      request2 = CreateTodoRequest("Todo 2")
+      request1 = CreateTodoRequest("Todo 1", None)
+      request2 = CreateTodoRequest("Todo 2", None)
       _ <- service.createTodo(request1)
       _ <- service.createTodo(request2)
       todos <- service.getAllTodos

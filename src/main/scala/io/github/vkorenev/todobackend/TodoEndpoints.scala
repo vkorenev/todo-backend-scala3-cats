@@ -22,7 +22,8 @@ case class TodoEndpoints[F[_]: Async](todoService: TodoService[F]):
     Todo(
       title = todoItem.title,
       completed = todoItem.completed,
-      url = s"$baseUri/todos/${todoItem.id}"
+      url = s"$baseUri/todos/${todoItem.id}",
+      order = todoItem.order
     )
 
   private def healthEndpoint = endpoint.get
