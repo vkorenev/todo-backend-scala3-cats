@@ -4,6 +4,7 @@ import cats.effect.Async
 import cats.effect.Resource
 import com.comcast.ip4s.*
 import fs2.io.net.Network
+import org.http4s.HttpRoutes
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.otel4s.middleware.metrics.OtelMetrics
 import org.http4s.otel4s.middleware.trace.redact.PathRedactor
@@ -19,7 +20,7 @@ object TodoRoutes:
   private val pathAndQueryRedactor = new PathRedactor.NeverRedact with QueryRedactor.NeverRedact {}
 
   def server[F[_]: {Async, Network, MeterProvider, TracerProvider}](
-      todoEndpoints: TodoEndpoints[F]
+      routes: HttpRoutes[F]
   ): Resource[F, Server] =
     for {
       metricsOps <- Resource.eval(OtelMetrics.serverMetricsOps[F]())
@@ -34,7 +35,7 @@ object TodoRoutes:
         .withPort(port"8080")
         .withHttpApp(
           serverMiddleware
-            .wrapHttpRoutes(Metrics(metricsOps)(todoEndpoints.routes))
+            .wrapHttpRoutes(Metrics(metricsOps)(routes))
             .orNotFound
         )
         .build

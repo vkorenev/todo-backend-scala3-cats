@@ -16,6 +16,6 @@ object Main extends IOApp.Simple:
       server <- {
         given MeterProvider[IO] = otel4s.meterProvider
         given TracerProvider[IO] = otel4s.tracerProvider
-        TodoRoutes.server(todoEndpoints)
+        TodoRoutes.server(todoEndpoints.routes)
       }
     } yield server).use(_ => IO.never)
