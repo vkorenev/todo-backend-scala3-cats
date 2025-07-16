@@ -7,6 +7,8 @@ val catsVersion = "2.13.0"
 val catsEffectVersion = "3.6.2"
 val fs2Version = "3.12.0"
 val http4sVersion = "0.23.30"
+val http4sOtel4sMiddlewareVersion = "0.13.0"
+val otel4sVersion = "0.13.1"
 val circeVersion = "0.14.14"
 val doobieVersion = "1.0.0-RC9"
 val pureConfigVersion = "0.17.9"
@@ -15,7 +17,6 @@ val log4catsVersion = "2.7.1"
 val munitVersion = "1.1.1"
 val munitCatsEffectVersion = "1.0.7"
 val tapirVersion = "1.11.35"
-val otel4sVersion = "0.13.1"
 val openTelemetryVersion = "1.51.0"
 val openTelemetryInstrumentationVersion = "2.17.1"
 val jsoniterScalaVersion = "2.36.7"
@@ -59,6 +60,8 @@ lazy val root = (project in file("."))
       "org.apache.logging.log4j" % "log4j-layout-template-json" % log4j2Bom.key.value % Runtime,
       "org.apache.logging.log4j" % "log4j-slf4j2-impl" % log4j2Bom.key.value % Runtime,
       "org.http4s" %% "http4s-ember-server" % http4sVersion,
+      "org.http4s" %% "http4s-otel4s-middleware-trace-server" % http4sOtel4sMiddlewareVersion,
+      "org.http4s" %% "http4s-otel4s-middleware-metrics" % http4sOtel4sMiddlewareVersion,
       "org.scalameta" %% "munit" % munitVersion % Test,
       "org.tpolecat" %% "doobie-core" % doobieVersion,
       "org.tpolecat" %% "doobie-h2" % doobieVersion,
