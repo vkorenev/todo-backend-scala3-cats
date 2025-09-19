@@ -24,13 +24,12 @@ spec:
               path: /health
               port: 8080
             initialDelaySeconds: 1
-            timeoutSeconds: 10
-            periodSeconds: 5
+            timeoutSeconds: 1
+            periodSeconds: 1
           livenessProbe:
             httpGet:
               path: /health
               port: 8080
-            initialDelaySeconds: 5
             timeoutSeconds: 30
             periodSeconds: 30
           env:
@@ -54,9 +53,8 @@ spec:
             httpGet:
               path: /
               port: 13133
-            initialDelaySeconds: 1
-            timeoutSeconds: 5
-            periodSeconds: 5
+            timeoutSeconds: 1
+            periodSeconds: 1
           livenessProbe:
             httpGet:
               path: /
