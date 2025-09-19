@@ -11,6 +11,7 @@ spec:
         autoscaling.knative.dev/minScale: "0"
         autoscaling.knative.dev/maxScale: "1"
         run.googleapis.com/container-dependencies: "{todo-backend:[otel-collector]}"
+        run.googleapis.com/startup-cpu-boost: "true"
     spec:
       serviceAccountName: ${GOOGLE_CLOUD_RUN_SERVICE_ACCOUNT_EMAIL}
       containers:
