@@ -1,25 +1,25 @@
 ThisBuild / version := sys.env.getOrElse("PROJECT_VERSION", "0.0.0-LOCAL-SNAPSHOT")
-ThisBuild / scalaVersion := "3.7.1"
+ThisBuild / scalaVersion := "3.7.3"
 ThisBuild / semanticdbEnabled := true
 ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
 val catsVersion = "2.13.0"
-val catsEffectVersion = "3.6.2"
-val fs2Version = "3.12.0"
+val catsEffectVersion = "3.6.3"
+val fs2Version = "3.12.2"
 val http4sVersion = "0.23.30"
-val http4sOtel4sMiddlewareVersion = "0.13.0"
+val http4sOtel4sMiddlewareVersion = "0.14.1"
 val otel4sVersion = "0.13.1"
 val circeVersion = "0.14.14"
-val doobieVersion = "1.0.0-RC9"
+val doobieVersion = "1.0.0-RC10"
 val pureConfigVersion = "0.17.9"
 val log4j2Version = "2.25.1"
 val log4catsVersion = "2.7.1"
-val munitVersion = "1.1.1"
+val munitVersion = "1.2.0"
 val munitCatsEffectVersion = "1.0.7"
-val tapirVersion = "1.11.35"
-val openTelemetryVersion = "1.51.0"
-val openTelemetryInstrumentationVersion = "2.17.1"
-val jsoniterScalaVersion = "2.36.7"
+val tapirVersion = "1.11.44"
+val openTelemetryVersion = "1.54.1"
+val openTelemetryInstrumentationVersion = "2.20.0"
+val jsoniterScalaVersion = "2.37.11"
 
 lazy val log4j2Bom = com.here.bom.Bom(
   "org.apache.logging.log4j" % "log4j-bom" % log4j2Version
